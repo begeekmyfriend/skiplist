@@ -141,7 +141,7 @@ static int
 random_level(void)
 {
   int level = 1;
-  if ((rand() & 0xffff) < 0xffff / 2)
+  while ((random() & 0xffff) < 0xffff / 2)
     level++;
   return level > MAX_LEVEL ? MAX_LEVEL : level;
 }
@@ -226,7 +226,7 @@ print(struct man *man)
 {
   struct sk_link *pos, *n;
   struct dog *dog;
-  int i;
+  //int i;
 
   printf("\nTotal %d dogs: \n", man->dog_num);
   pos = man->collar[0].next;
@@ -243,7 +243,11 @@ int main(void)
   struct man *man;
   struct dog *dog;
   int i;
-  int price[NUM];
+  int *price;
+
+	price = (int *)malloc(NUM * sizeof(int));
+	if (price == NULL)
+		exit(-1);
 
   // Hello man!
   man = man_birth();
@@ -260,13 +264,13 @@ int main(void)
   }
 
   // Show
-  print(man);
+  //print(man);
 
   // Search test.
   for (i = 0; i < NUM; i++) {
     dog = find(man, price[i]);
     if (dog != NULL) {
-      printf("dog price:0x%08x\n", dog->price);
+      //printf("dog price:0x%08x\n", dog->price);
     } else {
       printf("Not found:0x%08x\n", price[i]);
     }
@@ -283,7 +287,7 @@ int main(void)
   }
 
   // Show
-  print(man);
+  //print(man);
 
   // Goodbye man!
   man_kill(man);

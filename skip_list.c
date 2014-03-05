@@ -3,9 +3,9 @@
 * Author: Leo Ma
 * Date: 2014-03-01
 *********************/
+
 #include <stdio.h>
 #include <stdlib.h>
-
 
 struct sk_link {
   struct sk_link *next, *prev;
@@ -62,7 +62,7 @@ skip_list_empty(struct sk_link *link)
 #define skip_list_foreach_safe(pos, n, end) \
   for (n = pos->next; pos != end; pos = n, n = pos->next)
 
-#define MAX_LEVEL 32 
+#define MAX_LEVEL 32  /* Should be enough for 2^32 elements */
 
 struct man {
   int level;
@@ -138,8 +138,9 @@ man_kill(struct man *man)
 static int
 random_level(void)
 {
+  const double SKIPLIST_P = 0.25;
   int level = 1;
-  while ((random() & 0xffff) < 0xffff / 4)
+  while ((random() & 0xffff) < 0xffff * SKIPLIST_P)
     level++;
   return level > MAX_LEVEL ? MAX_LEVEL : level;
 }

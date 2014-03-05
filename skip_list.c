@@ -3,13 +3,20 @@
 * Author: Leo Ma
 * Date: 2014-03-01
 *********************/
+#include <stdio.h>
+#include <stdlib.h>
 
-#ifndef _SKIP_LIST_H_
-#define _SKIP_LIST_H_
 
 struct sk_link {
   struct sk_link *next, *prev;
 };
+
+static inline void
+skip_list_init(struct sk_link *link)
+{
+  link->prev = link;
+  link->next = link;
+}
 
 static inline void
 __skip_list_add(struct sk_link *link, struct sk_link *prev, struct sk_link *next)
@@ -37,56 +44,50 @@ static inline void
 skip_list_del(struct sk_link *link)
 {
   __skip_list_del(link->prev, link->next);
+  skip_list_init(link);
 }
 
-static inline void
-skip_list_init(struct sk_link *link)
+static inline int
+skip_list_empty(struct sk_link *link)
 {
-  link->prev = link;
-  link->next = link;
+  return link->next == link;
 }
 
 #define skip_list_entry(ptr, type, member) \
   ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
 
-#define skip_list_for_each(pos, end) \
+#define skip_list_foreach(pos, end) \
   for (; pos != end; pos = pos->next)
 
-#define skip_list_for_each_safe(pos, n, end) \
+#define skip_list_foreach_safe(pos, n, end) \
   for (n = pos->next; pos != end; pos = n, n = pos->next)
 
-#endif /* _SKIP_LIST_H_ */
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#define MAX_LEVEL  8
+#define MAX_LEVEL 32 
 
 struct man {
-  int rank;  // higher rank more dogs
+  int level;
   int dog_num;
   struct sk_link collar[MAX_LEVEL];
 };
 
 struct dog {
-  int rank;  // highest rank in collar.
   int price;
-  struct sk_link link[MAX_LEVEL];
+  struct sk_link link[];
 };
 
 // Wow!
 struct dog *
-dog_birth()
+dog_birth(int level, int price)
 {
   int i;
   struct dog *dog;
-  dog = (struct dog *)malloc(sizeof(*dog));
+
+  dog = (struct dog *)malloc(sizeof(*dog) + level * sizeof(struct sk_link));
   if (dog == NULL)
     return NULL;
 
-  dog->rank = 1;
-  dog->price = 0;
-  for (i = 0; i < sizeof(dog->link) / sizeof(dog->link[0]); i++)
+  dog->price = price;
+  for (i = 0; i < level; i++)
     skip_list_init(&dog->link[i]);
 
   return dog;
@@ -105,11 +106,12 @@ man_birth()
 {
   int i;
   struct man *man;
+
   man = (struct man *)malloc(sizeof(*man));
   if (man == NULL)
     return NULL;
 
-  man->rank = 1;
+  man->level = 1;
   man->dog_num = 0;
   for (i = 0; i < sizeof(man->collar) / sizeof(man->collar[0]); i++)
     skip_list_init(&man->collar[i]);
@@ -123,14 +125,10 @@ man_kill(struct man *man)
 {
   struct sk_link *pos, *n;
   struct dog *dog;
-  int i;
 
   pos = man->collar[0].next;
-  skip_list_for_each_safe(pos, n, &man->collar[0]) {
+  skip_list_foreach_safe(pos, n, &man->collar[0]) {
     dog = skip_list_entry(pos, struct dog, link[0]);
-    for (i = dog->rank - 1; i >= 0; i--) {
-      skip_list_del(&dog->link[i]);
-    }
     dog_kill(dog);
   }
   
@@ -141,25 +139,26 @@ static int
 random_level(void)
 {
   int level = 1;
-  while ((random() & 0xffff) < 0xffff / 2)
+  while ((random() & 0xffff) < 0xffff / 4)
     level++;
   return level > MAX_LEVEL ? MAX_LEVEL : level;
 }
 
-struct dog * /* $_$ */
+/* $_$ */
+struct dog *
 find(struct man *man, int price)
 {
   int i;
   struct sk_link *pos, *end;
 
-  i = man->rank - 1;
+  i = man->level - 1;
   pos = &man->collar[i];
   end = &man->collar[i];
 
   for (; i >= 0; i--) {
-    struct dog *dog = NULL;
+    struct dog *dog;
     pos = pos->next;
-    skip_list_for_each(pos, end) {
+    skip_list_foreach(pos, end) {
       dog = skip_list_entry(pos, struct dog, link[i]);
       if (dog->price == price) {
         return dog;
@@ -176,34 +175,42 @@ find(struct man *man, int price)
   return NULL;
 }
 
-void /* O^_^O */
-adopt(struct man *man, struct dog *dog)
+/* O^_^O */
+void
+adopt(struct man *man, int price)
 {
-  int i, rank;
+  int i, level;
   struct sk_link *pos, *end;
+  struct dog *dog;
 
-  rank = random_level();
-  dog->rank = rank;
-
-  if (rank > man->rank) {
-    man->rank = rank;
+  level = random_level();
+  if (level > man->level) {
+    man->level = level;
   }
 
-  i = rank - 1;
+  dog = dog_birth(level, price);
+  if (dog == NULL) {
+    return;
+  }
+
+  i = man->level - 1;
   pos = &man->collar[i];
   end = &man->collar[i];
+
   for (; i >= 0; i--) {
-    struct dog *d = NULL;
+    struct dog *d;
     pos = pos->next;
-    skip_list_for_each(pos, end) {
+    skip_list_foreach(pos, end) {
       d = skip_list_entry(pos, struct dog, link[i]);
-      if (d->price >= dog->price) {
+      if (d->price >= price) {
         end = &d->link[i];
         break;
       }
     }
     pos = end->prev;
-    skip_list_add(&dog->link[i], pos);
+    if (i < level) {
+      __skip_list_add(&dog->link[i], pos, end);
+    }
     pos--;
     end--;
   }
@@ -211,14 +218,47 @@ adopt(struct man *man, struct dog *dog)
   man->dog_num++;
 }
 
-void /* T_T */
-abandon(struct man *man, struct dog *dog)
+/* T_T */
+void
+__abandon(struct man *man, struct dog *dog, int level)
 {
   int i;
-  for (i = dog->rank - 1; i >= 0; i--)
+  for (i = 0; i < level; i++) {
     skip_list_del(&dog->link[i]);
+    if (skip_list_empty(&man->collar[i])) {
+      man->level--;
+    }
+  }
 
+  dog_kill(dog);
   man->dog_num--;
+}
+
+/* T_T */
+void
+abandon(struct man *man, int price)
+{
+  int i;
+  struct sk_link *pos, *n, *end;
+
+  i = man->level - 1;
+  pos = &man->collar[i];
+  end = &man->collar[i];
+
+  for (; i >= 0; i--) {
+    struct dog *dog;
+    pos = pos->next;
+    skip_list_foreach_safe(pos, n, end) {
+      dog = skip_list_entry(pos, struct dog, link[i]);
+      if (dog->price == price) {
+        // Here's no break statement because we allow dogs with same price.
+        __abandon(man, dog, i + 1);
+      }
+    }
+    pos = end->prev;
+    pos--;
+    end--;
+  }
 }
 
 void
@@ -226,11 +266,10 @@ print(struct man *man)
 {
   struct sk_link *pos, *n;
   struct dog *dog;
-  //int i;
 
   printf("\nTotal %d dogs: \n", man->dog_num);
   pos = man->collar[0].next;
-  skip_list_for_each_safe(pos, n, &man->collar[0]) {
+  skip_list_foreach_safe(pos, n, &man->collar[0]) {
     dog = skip_list_entry(pos, struct dog, link[0]);
     printf("price:0x%08x\n", dog->price);
   }
@@ -238,7 +277,7 @@ print(struct man *man)
 
 int main(void)
 {
-#define NUM 10000
+#define NUM 1024 * 1024
 
   struct man *man;
   struct dog *dog;
@@ -254,17 +293,17 @@ int main(void)
   if (man == NULL)
     exit(-1);
 
+  printf("Test start!\n");
+  printf("Start to adopt %d dogs...\n", NUM);
+
   // Insert test.
   for (i = 0; i < NUM; i++) {
-    dog = dog_birth();
-    if (dog == NULL)
-      exit(-1);
-    price[i] = dog->price = (int)rand();
-    adopt(man, dog);
+    price[i] = (int)rand();
+    adopt(man, price[i]);
   }
 
-  // Show
   //print(man);
+  printf("Adoption finished. Now play with each dog...\n");
 
   // Search test.
   for (i = 0; i < NUM; i++) {
@@ -276,18 +315,15 @@ int main(void)
     }
   }
 
+  printf("Play finished. Now abandon some dogs...\n");
+
   // Delete test.
   for (i = 0; i < NUM; i += 3) {
-    dog = find(man, price[i]);
-    if (dog != NULL) {
-      abandon(man, dog);
-    } else {
-      printf("Not found:0x%08x\n", price[i]);
-    }
+    abandon(man, price[i]);
   }
 
-  // Show
   //print(man);
+  printf("Abandon Finished.\nEnd of Test\n");
 
   // Goodbye man!
   man_kill(man);

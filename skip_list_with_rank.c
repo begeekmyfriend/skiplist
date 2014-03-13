@@ -323,12 +323,11 @@ first_in_range(struct man *man, struct range_spec *range)
       if (price_gte_min(dog->price, range)) {
         pos = dog->link[i].prev;
         end = dog->link[i].next;
-        pos--;
-        end--;
-        continue;
+        goto CONTINUE;
       }
     }
     pos = end->prev;
+CONTINUE:
     pos--;
     end--;
   }
@@ -359,12 +358,11 @@ last_in_range(struct man *man, struct range_spec *range)
       if (price_lte_max(dog->price, range)) {
         pos = dog->link[i].next;
         end = dog->link[i].prev;
-        pos--;
-        end--;
-        continue;
+        goto CONTINUE;
       }
     }
     pos = end->next;
+CONTINUE:
     pos--;
     end--;
   }
@@ -396,7 +394,7 @@ abandon_in_range(struct man *man, struct range_spec *range)
         end = &dog->link[i];
         break;
       } else if (price_gte_min(dog->price, range)) {
-        // Here's no break statement because we allow dogs with same price.
+        /* Here's no break statement because we allow dogs with same price. */
         __abandon(man, dog, i + 1, update);
         removed++;
       }
@@ -434,6 +432,7 @@ abandon_in_rank(struct man *man, unsigned int start, unsigned int stop)
         end = &dog->link[i];
         break;
       } else if (traversed + dog->link[i].span >= start) {
+        /* Here's no break statement because we allow dogs with same price. */
         __abandon(man, dog, i + 1, update);
         removed++;
         continue;
@@ -573,7 +572,8 @@ print(struct man *man)
   }
 }
 
-int main(void)
+int
+main(void)
 {
 #define NUM 1024 * 1024
 
@@ -582,9 +582,9 @@ int main(void)
   int i;
   int *price;
 
-	price = (int *)malloc(NUM * sizeof(int));
-	if (price == NULL)
-		exit(-1);
+  price = (int *)malloc(NUM * sizeof(int));
+  if (price == NULL)
+    exit(-1);
 
   // Hello man!
   man = man_birth();

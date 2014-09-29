@@ -1,4 +1,4 @@
-skip_list
-=========
+skiplist
+========
 
-When skip list meets list head, something interesting might happen...Code less than z_set in Redis.
+When skiplist meets list head, something interesting might happen...Code less than z_set in Redis.

@@ -15,7 +15,7 @@ int
 main(void)
 {
         int i;
-        struct timeval start, end;
+        struct timespec start, end;
 
         int *key = (int *)malloc(N * sizeof(int));
         if (key == NULL) {
@@ -32,20 +32,20 @@ main(void)
 
         /* Insert test */
         srandom(time(NULL));
-        gettimeofday(&start, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &start);
         for (i = 0; i < N; i++) {
                 int value = key[i] = (int)random();
                 skiplist_insert(list, key[i], value);
         }
-        gettimeofday(&end, NULL);
-        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_usec - start.tv_usec)/1000);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 #ifdef SKIPLIST_DEBUG
         skiplist_dump(list);
 #endif
 
         /* Search test 1 */
         printf("Now search each node by key...\n");
-        gettimeofday(&start, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &start);
         for (i = 0; i < N; i++) {
                 struct skipnode *node = skiplist_search_by_key(list, key[i]);
                 if (node != NULL) {
@@ -61,12 +61,12 @@ main(void)
                 //skiplist_key_rank(list, key[i]);
 #endif
         }
-        gettimeofday(&end, NULL);
-        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_usec - start.tv_usec)/1000);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 
         /* Search test 2 */
         printf("Now search each node by rank...\n");
-        gettimeofday(&start, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &start);
         for (i = 0; i < N; i++) {
                 struct skipnode *node = skiplist_search_by_rank(list, i + 1);
                 if (node != NULL) {
@@ -77,17 +77,17 @@ main(void)
                         printf("Not found:%d\n", i + 1);
                 }
         }
-        gettimeofday(&end, NULL);
-        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_usec - start.tv_usec)/1000);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 
         /* Delete test */
         printf("Now remove all nodes...\n");
-        gettimeofday(&start, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &start);
         for (i = 0; i < N; i++) {
                 skiplist_remove(list, key[i]);
         }
-        gettimeofday(&end, NULL);
-        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_usec - start.tv_usec)/1000);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 #ifdef SKIPLIST_DEBUG
         skiplist_dump(list);
 #endif

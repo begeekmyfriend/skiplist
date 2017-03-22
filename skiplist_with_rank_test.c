@@ -111,5 +111,7 @@ main(void)
     printf("End of Test.\n");
     skiplist_delete(list);
 
+    free(key);
+
     return 0;
 }

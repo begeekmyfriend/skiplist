@@ -522,11 +522,12 @@ static void skiplist_dump(struct skiplist *list)
         for (; i >= 0; i--) {
                 traversed = 0;
                 pos = pos->next;
+                printf("level %d:\n", i + 1);
                 skiplist_foreach_forward(pos, end) {
                         node = list_entry(pos, struct skipnode, link[i]);
                         traversed += node->link[i].span;
-                        printf("level:%d key:0x%08x value:0x%08x rank:%u\n",
-                                i + 1, node->key, node->value, traversed);
+                        printf("key:0x%08x value:0x%08x rank:%u\n",
+                                node->key, node->value, traversed);
                 }
                 pos = &list->head[i];
                 pos--;

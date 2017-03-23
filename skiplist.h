@@ -224,6 +224,7 @@ static void skiplist_remove(struct skiplist *list, int key)
 
 static void skiplist_dump(struct skiplist *list)
 {
+        struct skipnode *node;
         int i = list->level - 1;
         struct sk_link *pos = &list->head[i];
         struct sk_link *end = &list->head[i];
@@ -231,10 +232,10 @@ static void skiplist_dump(struct skiplist *list)
         printf("\nTotal %d nodes: \n", list->count);
         for (; i >= 0; i--) {
                 pos = pos->next;
+                printf("level %d:\n", i + 1);
                 skiplist_foreach(pos, end) {
-                        struct skipnode *node = list_entry(pos, struct skipnode, link[i]);
-                        printf("level:%d key:0x%08x value:0x%08x\n",
-                                        i + 1, node->key, node->value);
+                        node = list_entry(pos, struct skipnode, link[i]);
+                        printf("key:0x%08x value:0x%08x\n", node->key, node->value);
                 }
                 pos = &list->head[i];
                 pos--;

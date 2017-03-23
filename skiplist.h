@@ -208,7 +208,10 @@ static void skiplist_remove(struct skiplist *list, int key)
                 pos = pos->next;
                 skiplist_foreach_safe(pos, n, end) {
                         node = list_entry(pos, struct skipnode, link[i]);
-                        if (node->key == key) {
+                        if (node->key > key) {
+                                end = &node->link[i];
+                                break;
+                        } else if (node->key == key) {
                                 /* we allow nodes with same key. */
                                 __remove(list, node, i + 1);
                         }

@@ -211,9 +211,7 @@ static void skiplist_remove(struct skiplist *list, int key)
                         if (node->key > key) {
                                 end = &node->link[i];
                                 break;
-                        }
-
-                        if(node->key == key) {
+                        } else if (node->key == key) {
                                 /* we allow nodes with same key. */
                                 __remove(list, node, i + 1);
                         }

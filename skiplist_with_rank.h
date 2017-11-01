@@ -51,16 +51,16 @@ static inline int list_empty(struct sk_link *link)
         ((type *)((char *)(ptr) - (size_t)(&((type *)0)->member)))
 
 #define skiplist_foreach_forward(pos, end) \
-        for (; pos != end; pos = pos->next)
+        for (; pos != end; pos = (pos)->next)
 
 #define skiplist_foreach_forward_safe(pos, n, end) \
-        for (n = pos->next; pos != end; pos = n, n = pos->next)
+        for (n = (pos)->next; pos != end; pos = n, n = (pos)->next)
 
 #define skiplist_foreach_backward(pos, end) \
-        for (; pos != end; pos = pos->prev)
+        for (; pos != end; pos = (pos)->prev)
 
 #define skiplist_foreach_backward_safe(pos, n, end) \
-        for (n = pos->prev; pos != end; pos = n, n = pos->prev)
+        for (n = (pos)->prev; pos != end; pos = n, n = (pos)->prev)
 
 #define MAX_LEVEL 32  /* Should be enough for 2^32 elements */
 

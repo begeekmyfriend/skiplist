@@ -498,9 +498,9 @@ static struct skipnode *skiplist_search_by_rank(struct skiplist *list, int rank)
                                 break;
                         }
                         traversed += node->link[i].span;
-                }
-                if (rank == traversed) {
-                        return node;
+                        if (rank == traversed) {
+                                return node;
+                        }
                 }
                 pos = end->prev;
                 pos--;

@@ -388,7 +388,7 @@ static int remove_in_rank(struct skiplist *list, int start, int stop)
         struct sk_link *pos = &list->head[i];
         struct sk_link *end = &list->head[i];
         int removed = 0, traversed = 0;
-        struct sk_link *n, *update[MAX_LEVEL];
+        struct sk_link *n, *update[MAX_LEVEL] = {0};
 
         if (start <= 0 || stop <= 0 || start > list->count) {
                 return 0;
@@ -405,7 +405,6 @@ static int remove_in_rank(struct skiplist *list, int start, int stop)
                                 /* we allow nodes with same key. */
                                 __remove(list, node, i + 1, update);
                                 removed++;
-                                continue;
                         }
                         traversed += node->link[i].span;
                 }
